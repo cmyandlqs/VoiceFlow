@@ -1,0 +1,32 @@
+hotkey:
+  mode: hold_to_talk
+  combo: f12
+
+audio:
+  sample_rate: 16000
+  channels: 1
+  dtype: int16
+  max_record_seconds: 60
+
+asr:
+  endpoint: http://127.0.0.1:8000
+  model: /home/sikm/Project/llm/qwen3-asr-1.7B
+  timeout_seconds: 20
+  language: zh
+  prompt: ""
+
+paste:
+  enabled: true
+  method: clipboard
+  linux_paste_shortcut: ctrl+v
+  restore_clipboard: true
+
+ux:
+  start_beep: true
+  end_beep: true
+  error_beep: true
+  notify: true
+
+log:
+  level: INFO
+  file: ./logs/voice_input.log

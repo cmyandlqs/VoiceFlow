@@ -1,0 +1,83 @@
+2026-04-19 14:57:03 INFO  [voice_input.hotkey] Hotkey registered: f12
+2026-04-19 14:57:03 INFO  [voice_input.main] Voice Input started. Press F12 to talk. Ctrl+C to quit.
+2026-04-19 14:58:41 INFO  [voice_input.main] Received signal 2, shutting down...
+2026-04-19 14:58:41 INFO  [voice_input.hotkey] Hotkey listener stopped
+2026-04-19 14:58:41 INFO  [voice_input.main] Voice Input stopped.
+2026-04-19 14:59:05 INFO  [voice_input.hotkey] Hotkey registered: f12
+2026-04-19 14:59:05 INFO  [voice_input.main] Voice Input started. Press F12 to talk. Ctrl+C to quit.
+2026-04-19 14:59:29 INFO  [voice_input.main] Received signal 2, shutting down...
+2026-04-19 14:59:29 INFO  [voice_input.hotkey] Hotkey listener stopped
+2026-04-19 14:59:29 INFO  [voice_input.main] Voice Input stopped.
+2026-04-19 14:59:30 INFO  [voice_input.hotkey] Hotkey registered: f12
+2026-04-19 14:59:30 INFO  [voice_input.main] Voice Input started. Press F12 to talk. Ctrl+C to quit.
+2026-04-19 14:59:38 INFO  [voice_input.state] [2026-04-19 14:59:38] IDLE -> RECORDING (event: HOTKEY_PRESSED)
+2026-04-19 14:59:38 INFO  [voice_input.audio] Recording started (sr=16000, max=60s)
+2026-04-19 14:59:40 INFO  [voice_input.audio] Recording stopped: 1.70s, 27278 samples
+2026-04-19 14:59:40 INFO  [voice_input.state] [2026-04-19 14:59:40] RECORDING -> TRANSCRIBING (event: HOTKEY_RELEASED)
+2026-04-19 14:59:40 WARNING [voice_input.asr] ASR attempt 1 failed (ASRUnavailableError), retrying...
+2026-04-19 14:59:40 ERROR [voice_input.main] ASR failed: ASR client error: 400
+2026-04-19 14:59:40 INFO  [voice_input.state] [2026-04-19 14:59:40] TRANSCRIBING -> ERROR (event: ASR_FAILED)
+2026-04-19 14:59:40 INFO  [voice_input.state] [2026-04-19 14:59:40] ERROR -> IDLE (event: RECOVERED)
+2026-04-19 15:01:56 INFO  [voice_input.state] [2026-04-19 15:01:56] IDLE -> RECORDING (event: HOTKEY_PRESSED)
+2026-04-19 15:01:56 INFO  [voice_input.audio] Recording started (sr=16000, max=60s)
+2026-04-19 15:02:00 INFO  [voice_input.audio] Recording stopped: 3.08s, 49294 samples
+2026-04-19 15:02:00 INFO  [voice_input.state] [2026-04-19 15:02:00] RECORDING -> TRANSCRIBING (event: HOTKEY_RELEASED)
+2026-04-19 15:02:00 INFO  [voice_input.asr] [asr] latency=126ms text_len=8 request_id=
+2026-04-19 15:02:00 INFO  [voice_input.main] ASR result: 请检查整个项目。
+2026-04-19 15:02:00 INFO  [voice_input.state] [2026-04-19 15:02:00] TRANSCRIBING -> PASTING (event: ASR_SUCCESS)
+2026-04-19 15:02:00 INFO  [voice_input.injector] [paste] success text_len=8
+2026-04-19 15:02:00 INFO  [voice_input.state] [2026-04-19 15:02:00] PASTING -> IDLE (event: PASTE_DONE)
+2026-04-19 15:02:32 INFO  [voice_input.state] [2026-04-19 15:02:32] IDLE -> RECORDING (event: HOTKEY_PRESSED)
+2026-04-19 15:02:32 INFO  [voice_input.audio] Recording started (sr=16000, max=60s)
+2026-04-19 15:02:34 INFO  [voice_input.audio] Recording stopped: 2.50s, 40078 samples
+2026-04-19 15:02:34 INFO  [voice_input.state] [2026-04-19 15:02:34] RECORDING -> TRANSCRIBING (event: HOTKEY_RELEASED)
+2026-04-19 15:02:34 INFO  [voice_input.asr] [asr] latency=101ms text_len=8 request_id=
+2026-04-19 15:02:34 INFO  [voice_input.main] ASR result: 请检查整个项目。
+2026-04-19 15:02:34 INFO  [voice_input.state] [2026-04-19 15:02:34] TRANSCRIBING -> PASTING (event: ASR_SUCCESS)
+2026-04-19 15:02:35 INFO  [voice_input.injector] [paste] success text_len=8
+2026-04-19 15:02:35 INFO  [voice_input.state] [2026-04-19 15:02:35] PASTING -> IDLE (event: PASTE_DONE)
+2026-04-19 15:03:50 INFO  [voice_input.main] Received signal 2, shutting down...
+2026-04-19 15:03:50 INFO  [voice_input.hotkey] Hotkey listener stopped
+2026-04-19 15:03:50 INFO  [voice_input.main] Voice Input stopped.
+2026-04-19 15:04:17 INFO  [voice_input.hotkey] Hotkey registered: f12
+2026-04-19 15:04:17 INFO  [voice_input.main] Voice Input started. Press F12 to talk. Ctrl+C to quit.
+2026-04-19 15:04:19 INFO  [voice_input.state] [2026-04-19 15:04:19] IDLE -> RECORDING (event: HOTKEY_PRESSED)
+2026-04-19 15:04:19 INFO  [voice_input.audio] Recording started (sr=16000, max=60s)
+2026-04-19 15:04:23 INFO  [voice_input.audio] Recording stopped: 3.38s, 54072 samples
+2026-04-19 15:04:23 INFO  [voice_input.state] [2026-04-19 15:04:23] RECORDING -> TRANSCRIBING (event: HOTKEY_RELEASED)
+2026-04-19 15:04:23 INFO  [voice_input.asr] [asr] latency=98ms text_len=8 request_id=
+2026-04-19 15:04:23 INFO  [voice_input.main] ASR result: 请检查整个项目。
+2026-04-19 15:04:23 INFO  [voice_input.state] [2026-04-19 15:04:23] TRANSCRIBING -> PASTING (event: ASR_SUCCESS)
+2026-04-19 15:04:23 INFO  [voice_input.injector] [paste] success text_len=8
+2026-04-19 15:04:24 INFO  [voice_input.state] [2026-04-19 15:04:24] PASTING -> IDLE (event: PASTE_DONE)
+2026-04-19 15:05:04 INFO  [voice_input.state] [2026-04-19 15:05:04] IDLE -> RECORDING (event: HOTKEY_PRESSED)
+2026-04-19 15:05:04 INFO  [voice_input.audio] Recording started (sr=16000, max=60s)
+2026-04-19 15:05:07 INFO  [voice_input.audio] Recording stopped: 3.56s, 56974 samples
+2026-04-19 15:05:07 INFO  [voice_input.state] [2026-04-19 15:05:07] RECORDING -> TRANSCRIBING (event: HOTKEY_RELEASED)
+2026-04-19 15:05:07 INFO  [voice_input.asr] [asr] latency=124ms text_len=16 request_id=
+2026-04-19 15:05:07 INFO  [voice_input.main] ASR result: 这个项目的作用是什么？怎么安装？
+2026-04-19 15:05:07 INFO  [voice_input.state] [2026-04-19 15:05:07] TRANSCRIBING -> PASTING (event: ASR_SUCCESS)
+2026-04-19 15:05:08 INFO  [voice_input.injector] [paste] success text_len=16
+2026-04-19 15:05:08 INFO  [voice_input.state] [2026-04-19 15:05:08] PASTING -> IDLE (event: PASTE_DONE)
+2026-04-19 15:06:48 INFO  [voice_input.main] Received signal 2, shutting down...
+2026-04-19 15:06:48 INFO  [voice_input.hotkey] Hotkey listener stopped
+2026-04-19 15:06:48 INFO  [voice_input.main] Voice Input stopped.
+2026-04-19 15:06:51 INFO  [voice_input.hotkey] Hotkey registered: f12
+2026-04-19 15:06:51 INFO  [voice_input.main] Voice Input started. Press F12 to talk. Ctrl+C to quit.
+2026-04-19 15:09:03 INFO  [voice_input.main] Received signal 2, shutting down...
+2026-04-19 15:09:03 INFO  [voice_input.hotkey] Hotkey listener stopped
+2026-04-19 15:09:03 INFO  [voice_input.main] Voice Input stopped.
+2026-04-19 15:10:11 INFO  [voice_input.hotkey] Hotkey registered: f12
+2026-04-19 15:10:11 INFO  [voice_input.main] Voice Input started. Press F12 to talk. Ctrl+C to quit.
+2026-04-19 15:10:54 INFO  [voice_input.state] [2026-04-19 15:10:54] IDLE -> RECORDING (event: HOTKEY_PRESSED)
+2026-04-19 15:10:54 INFO  [voice_input.audio] Recording started (sr=16000, max=60s)
+2026-04-19 15:11:00 INFO  [voice_input.audio] Recording stopped: 5.97s, 95544 samples
+2026-04-19 15:11:00 INFO  [voice_input.state] [2026-04-19 15:11:00] RECORDING -> TRANSCRIBING (event: HOTKEY_RELEASED)
+2026-04-19 15:11:00 INFO  [voice_input.asr] [asr] latency=149ms text_len=27 request_id=
+2026-04-19 15:11:00 INFO  [voice_input.main] ASR result: 现在，请根据最新的项目完成更新Redmi文档中的内容。
+2026-04-19 15:11:00 INFO  [voice_input.state] [2026-04-19 15:11:00] TRANSCRIBING -> PASTING (event: ASR_SUCCESS)
+2026-04-19 15:11:01 INFO  [voice_input.injector] [paste] success text_len=27
+2026-04-19 15:11:01 INFO  [voice_input.state] [2026-04-19 15:11:01] PASTING -> IDLE (event: PASTE_DONE)
+2026-04-19 15:16:13 INFO  [voice_input.main] Received signal 2, shutting down...
+2026-04-19 15:16:13 INFO  [voice_input.hotkey] Hotkey listener stopped
+2026-04-19 15:16:13 INFO  [voice_input.main] Voice Input stopped.
