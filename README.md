@@ -76,6 +76,8 @@ paste:
   restore_clipboard: true         # 是否恢复原剪贴板内容
 
 ux:
+  indicator: true                 # 录音悬浮指示器（mac 风格胶囊）
+  indicator_follow_pointer: true  # 是否跟随鼠标指针
   start_beep: true    # 开始录音提示音
   end_beep: true      # 结束录音提示音
   notify: true        # 桌面通知
@@ -91,6 +93,7 @@ ux:
 ├── text_injector.py     # 剪贴板粘贴
 ├── hotkey_manager.py    # 全局热键（X11 XGrabKey）
 ├── notifier.py          # 桌面通知 & 提示音
+├── voice_indicator.py   # 录音悬浮指示器（Tkinter）
 ├── utils.py             # 配置加载 & 日志
 ├── config.yaml          # 配置文件
 ├── pyproject.toml       # 依赖管理

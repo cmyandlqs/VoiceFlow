@@ -9,6 +9,7 @@ from asr_client import ASRClient, ASRTimeoutError, ASRUnavailableError, ASREmpty
 from text_injector import TextInjector
 from hotkey_manager import HotkeyManager
 from notifier import Notifier
+from voice_indicator import VoiceIndicator
 from utils import load_config, setup_logging
 
 logger = logging.getLogger("voice_input.main")
@@ -44,6 +45,10 @@ class VoiceInputApp:
             notify_enabled=cfg.get("ux", {}).get("notify", True),
             sound_enabled=cfg.get("ux", {}).get("start_beep", True),
         )
+        self.indicator = VoiceIndicator(
+            enabled=cfg.get("ux", {}).get("indicator", True),
+            follow_pointer=cfg.get("ux", {}).get("indicator_follow_pointer", True),
+        )
 
         self.hotkey = HotkeyManager(combo=cfg["hotkey"]["combo"])
         self.hotkey.on_press(self._on_hotkey_press)
@@ -58,10 +63,12 @@ class VoiceInputApp:
         try:
             self.state.transition(AppState.RECORDING, "HOTKEY_PRESSED")
             self.recorder.start()
+            self.indicator.show_listening()
             self.notifier.notify("正在聆听...")
             self.notifier.play_start_beep()
         except Exception as e:
             logger.error("Failed to start recording: %s", e)
+            self.indicator.hide()
             self.state.force_reset("START_FAILED")
 
     def _on_hotkey_release(self) -> None:
@@ -70,10 +77,12 @@ class VoiceInputApp:
         try:
             data, wav_path = self.recorder.stop()
             self.state.transition(AppState.TRANSCRIBING, "HOTKEY_RELEASED")
+            self.indicator.show_transcribing()
             self.notifier.notify("识别中...")
 
             if not wav_path:
                 logger.warning("No audio recorded")
+                self.indicator.hide()
                 self.state.force_reset("NO_AUDIO")
                 return
 
@@ -94,26 +103,31 @@ class VoiceInputApp:
                 logger.warning("Paste returned False")
 
             self.state.transition(AppState.IDLE, "PASTE_DONE")
+            self.indicator.hide()
 
         except (ASRTimeoutError, ASRUnavailableError) as e:
             logger.error("ASR failed: %s", e)
             self.state.transition(AppState.ERROR, "ASR_FAILED")
+            self.indicator.hide()
             self.notifier.notify(f"识别失败: {type(e).__name__}")
             self.notifier.play_error_beep()
             self.state.transition(AppState.IDLE, "RECOVERED")
         except ASREmptyError:
             logger.warning("ASR returned empty result")
+            self.indicator.hide()
             self.state.force_reset("ASR_EMPTY")
             self.notifier.notify("未识别到语音")
             self.notifier.play_error_beep()
         except Exception as e:
             logger.exception("Unexpected error in hotkey release: %s", e)
+            self.indicator.hide()
             self.state.force_reset("UNEXPECTED_ERROR")
             self.notifier.notify("发生错误")
             self.notifier.play_error_beep()
 
     def run(self) -> None:
         self._running = True
+        self.indicator.start()
         self.hotkey.start()
         logger.info("Voice Input started. Press F12 to talk. Ctrl+C to quit.")
 
@@ -130,6 +144,7 @@ class VoiceInputApp:
         except KeyboardInterrupt:
             pass
         finally:
+            self.indicator.stop()
             self.hotkey.stop()
             logger.info("Voice Input stopped.")
 

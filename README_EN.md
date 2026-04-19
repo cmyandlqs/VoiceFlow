@@ -70,6 +70,8 @@ paste:
   restore_clipboard: true
 
 ux:
+  indicator: true
+  indicator_follow_pointer: true
   start_beep: true
   notify: true
 ```
