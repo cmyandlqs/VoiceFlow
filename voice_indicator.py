@@ -72,8 +72,8 @@ class VoiceIndicator:
             except Exception as e:
                 logger.debug("Pointer tracking unavailable: %s", e)
 
-        width = 108
-        height = 44
+        width = 132
+        height = 52
         x = max(20, (root.winfo_screenwidth() - width) // 2)
         y = max(20, int(root.winfo_screenheight() * 0.12))
 
@@ -85,36 +85,36 @@ class VoiceIndicator:
         except Exception:
             pass
         root.geometry(f"{width}x{height}+{x}+{y}")
-        root.configure(bg="#111318")
+        root.configure(bg="#ECEFF4")
 
         canvas = tk.Canvas(
             root,
             width=width,
             height=height,
-            bg="#111318",
+            bg="#ECEFF4",
             bd=0,
             highlightthickness=0,
         )
         canvas.pack(fill=tk.BOTH, expand=True)
 
-        # Shadow
-        canvas.create_oval(3, 5, 43, 41, fill="#0A0C10", outline="")
-        canvas.create_rectangle(23, 5, 85, 41, fill="#0A0C10", outline="")
-        canvas.create_oval(65, 5, 105, 41, fill="#0A0C10", outline="")
+        # Soft shadow
+        canvas.create_oval(5, 7, 53, 49, fill="#D5DBE6", outline="")
+        canvas.create_rectangle(29, 7, 105, 49, fill="#D5DBE6", outline="")
+        canvas.create_oval(81, 7, 127, 49, fill="#D5DBE6", outline="")
 
         # Capsule body
-        canvas.create_oval(2, 2, 42, 42, fill="#1B1E25", outline="#2F3440", width=1)
-        canvas.create_rectangle(22, 2, 86, 42, fill="#1B1E25", outline="#2F3440", width=1)
-        canvas.create_oval(66, 2, 106, 42, fill="#1B1E25", outline="#2F3440", width=1)
+        canvas.create_oval(4, 4, 52, 48, fill="#F8FAFD", outline="#DDE3EE", width=1)
+        canvas.create_rectangle(28, 4, 104, 48, fill="#F8FAFD", outline="#DDE3EE", width=1)
+        canvas.create_oval(80, 4, 128, 48, fill="#F8FAFD", outline="#DDE3EE", width=1)
 
-        pulse_ring = canvas.create_oval(13, 13, 31, 31, outline="#FF5D55", width=2)
-        core_dot = canvas.create_oval(16, 16, 28, 28, fill="#FF3B30", outline="")
+        pulse_ring = canvas.create_oval(15, 15, 37, 37, outline="#FF8A84", width=2)
+        core_dot = canvas.create_oval(20, 20, 32, 32, fill="#FF5B52", outline="")
         dots = [
-            canvas.create_oval(60, 19, 68, 27, fill="#8F98A8", outline=""),
-            canvas.create_oval(72, 19, 80, 27, fill="#8F98A8", outline=""),
-            canvas.create_oval(84, 19, 92, 27, fill="#8F98A8", outline=""),
+            canvas.create_oval(74, 22, 82, 30, fill="#A7B2C3", outline=""),
+            canvas.create_oval(86, 22, 94, 30, fill="#A7B2C3", outline=""),
+            canvas.create_oval(98, 22, 106, 30, fill="#A7B2C3", outline=""),
         ]
-        label = canvas.create_text(45, 22, text="REC", fill="#AEB6C4", anchor="w")
+        label = canvas.create_text(51, 26, text="REC", fill="#5E6A7F", anchor="w")
 
         mode: Literal["hidden", "listening", "transcribing"] = "hidden"
         tick = 0
@@ -135,13 +135,13 @@ class VoiceIndicator:
 
             set_visible(True)
             if mode == "listening":
-                canvas.itemconfigure(label, text="REC", fill="#C3CBDA")
+                canvas.itemconfigure(label, text="REC", fill="#4F5D75")
                 canvas.itemconfigure(core_dot, state="normal")
                 canvas.itemconfigure(pulse_ring, state="normal")
                 for d in dots:
                     canvas.itemconfigure(d, state="hidden")
             else:
-                canvas.itemconfigure(label, text="ASR", fill="#AEB6C4")
+                canvas.itemconfigure(label, text="ASR", fill="#5E6A7F")
                 canvas.itemconfigure(core_dot, state="hidden")
                 canvas.itemconfigure(pulse_ring, state="hidden")
                 for d in dots:
@@ -173,14 +173,14 @@ class VoiceIndicator:
             if mode == "listening":
                 phase = tick % 16
                 expand = phase if phase <= 8 else 16 - phase
-                pad = 13 - expand * 0.4
-                canvas.coords(pulse_ring, pad, pad, 44 - pad, 44 - pad)
-                color = "#FF4F46" if phase < 8 else "#FF6E66"
+                pad = 15 - expand * 0.45
+                canvas.coords(pulse_ring, pad, pad, 52 - pad, 52 - pad)
+                color = "#FF7A72" if phase < 8 else "#FF9A95"
                 canvas.itemconfigure(pulse_ring, outline=color)
             elif mode == "transcribing":
                 phase = tick % 3
                 for i, d in enumerate(dots):
-                    fill = "#E2E8F4" if i == phase else "#6E7787"
+                    fill = "#617089" if i == phase else "#B5C0CF"
                     canvas.itemconfigure(d, fill=fill)
 
         def pump() -> None:
