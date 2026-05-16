@@ -41,13 +41,33 @@ class PasteModeDetector:
     def _get_active_window_class(self) -> str:
         """获取当前窗口类名"""
         try:
+            # 获取当前窗口 ID
+            window_id = subprocess.run(
+                ["xdotool", "getactivewindow"],
+                capture_output=True,
+                text=True,
+                timeout=1,
+            ).stdout.strip()
+
+            if not window_id:
+                return ""
+
+            # 使用 xprop 获取窗口类名
             result = subprocess.run(
-                ["xdotool", "getactivewindow", "getwindowclassname"],
+                ["xprop", "-id", window_id, "WM_CLASS"],
                 capture_output=True,
                 text=True,
                 timeout=1,
             )
-            return result.stdout.strip().lower()
+            # xprop 返回格式: WM_CLASS(STRING) = "gnome-terminal", "Gnome-terminal"
+            if "WM_CLASS" in result.stdout:
+                # 提取类名（引号中的内容）
+                import re
+                matches = re.findall(r'"([^"]+)"', result.stdout)
+                if matches:
+                    # 通常第二个是更具体的类名，返回所有类名连接起来
+                    return " ".join(matches).lower()
+            return ""
         except Exception as e:
             logger.debug("Could not get window class: %s", e)
             return ""
