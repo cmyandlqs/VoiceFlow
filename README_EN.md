@@ -2,7 +2,7 @@
 
 [中文文档](README.md)
 
-**Local Voice Input Assistant** — Hold F12 to speak, release to transcribe and paste at the cursor.
+**Local Voice Input Assistant** — Hold F10 (smart paste) or F11 (terminal paste) to speak, release to transcribe and paste at the cursor.
 
 No cloud, no app switching. Just speak and the text appears.
 
@@ -10,8 +10,9 @@ No cloud, no app switching. Just speak and the text appears.
 
 ## Features
 
-- **Global hotkey** — Hold F12 to record, release to transcribe, no workflow interruption
+- **Dual hotkey mode** — F10 smart paste (auto-detects window type), F11 terminal paste (forces `ctrl+shift+v`)
 - **Auto-paste** — Recognized text is inserted directly at the cursor position
+- **Smart window detection** — Automatically detects terminal windows and selects the correct paste shortcut
 - **Fully local** — Audio never leaves the machine, privacy-first
 - **Low latency** — End-to-end in 1-3 seconds
 - **Swappable backend** — ASR model is configurable
@@ -44,12 +45,13 @@ uv pip install -e ".[dev]"
 .venv/bin/python main.py
 ```
 
-Hold **F12** to start recording, release to transcribe and paste. Press `Ctrl+C` to quit.
+Hold **F10** (smart paste) or **F11** (terminal paste) to start recording, release to transcribe and paste. Press `Ctrl+C` to quit.
 
 ## Usage
 
 ```
-Focus any input field → Hold F12 → Speak → Release F12 → Text appears at cursor
+Normal apps: Focus input field → Hold F10 → Speak → Release F10 → Text appears at cursor
+Terminals:   Focus terminal → Hold F10 (auto-detected) or F11 (force terminal mode) → Speak → Release → Text pasted
 ```
 
 ## Configuration
@@ -58,7 +60,8 @@ Edit `config.yaml` to customize:
 
 ```yaml
 hotkey:
-  combo: f12
+  smart_combo: f10       # Smart paste mode (auto-detect window type)
+  terminal_combo: f11    # Terminal paste mode (forces ctrl+shift+v)
 
 asr:
   endpoint: http://127.0.0.1:8000
@@ -66,8 +69,12 @@ asr:
   language: zh
 
 paste:
-  linux_paste_shortcut: ctrl+v
+  smart_mode: true                    # Enable smart window detection
+  default_shortcut: ctrl+v            # Paste shortcut for normal windows
+  terminal_shortcut: ctrl+shift+v     # Paste shortcut for terminals
   restore_clipboard: true
+  terminal_classes: [...]             # List of terminal window class names
+  terminal_title_keywords: [...]      # List of terminal title keywords
 
 ux:
   indicator: true

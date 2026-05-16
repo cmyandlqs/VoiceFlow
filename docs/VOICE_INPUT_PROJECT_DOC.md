@@ -3,7 +3,7 @@
 - 版本: v0.1（MVP 设计文档）
 - 日期: 2026-04-19
 - 目标平台: Ubuntu 桌面（X11 优先，Wayland 兼容说明见后文）
-- 核心交互: `按住说话` -> `松开结束` -> `直接粘贴到当前光标`
+- 核心交互: `F10 智能粘贴` / `F11 终端粘贴` → `按住说话` → `松开结束` → `直接粘贴到当前光标`
 - 我的系统环境：ubuntu24：
     XDG_SESSION_TYPE=x11
     XDG_CURRENT_DESKTOP=ubuntu:GNOME
@@ -41,11 +41,13 @@
 ### 2.1 单次语音输入流程
 
 1. 用户在任意应用聚焦输入框（IDE、浏览器、聊天窗口等）。
-2. 按住快捷键（示例: `F12`）。
-3. 工具开始录音，屏幕角落提示“正在聆听”。
+2. 按住快捷键 **F10**（智能粘贴模式）或 **F11**（终端粘贴模式）。
+3. 工具开始录音，屏幕角落提示”正在聆听”。
 4. 松开快捷键，立即停止录音并开始识别。
-5. 识别结果返回后，自动粘贴到当前光标位置。
-6. 可选提示音/气泡显示“已插入”。
+5. 识别结果返回后，自动粘贴到当前光标位置：
+   - F10 模式下自动检测窗口类型，终端用 `ctrl+shift+v`，普通窗口用 `ctrl+v`。
+   - F11 模式下强制使用 `ctrl+shift+v`（终端模式）。
+6. 可选提示音/气泡显示”已插入”。
 
 ### 2.2 体验指标（建议）
 
@@ -59,7 +61,7 @@
 
 ```text
 +---------------------+
-| Global Hotkey Layer |
+| Global Hotkey Layer |  (F10 = smart, F11 = terminal)
 +----------+----------+
            |
            v
@@ -75,10 +77,10 @@
 +----------+----------+       +-----------+-----------+
            |
            v
-+---------------------+
-| Text Injector       |
-| Clipboard+Paste     |
-+---------------------+
++---------------------+       +-----------------------+
+| Window Detector     | ----> | Text Injector         |
+| (terminal/normal)   |       | Clipboard+Paste       |
++---------------------+       +-----------------------+
 ```
 
 ### 3.1 设计原则
@@ -92,15 +94,17 @@
 ## 4. 模块设计
 
 ## 4.1 `hotkey_manager`
-职责：监听全局快捷键事件（按下/释放）。
+职责：监听全局快捷键事件（按下/释放），支持双热键模式。
 
 输入：系统按键事件。
-输出：`on_press`、`on_release` 回调。
+输出：`on_press` 回调、`on_release(combo_mode)` 回调（`combo_mode` 标识触发的热键，如 `"smart"` 或 `"terminal"`）。
 
-建议实现：
+实现：
 
-1. Python: `pynput` / `keyboard`（X11 下通常可用）。
-2. 若 Wayland 受限，提供降级策略（见 10.5）。
+1. 基于 python-xlib 的 XGrabKey，支持多热键字典配置。
+2. 每个热键注册多种修饰符组合（0, Mod2Mask, LockMask）。
+3. 自动按键重复检测（peek next event）。
+4. 若 Wayland 受限，提供降级策略（见 10.5）。
 
 ## 4.2 `audio_recorder`
 职责：录制 PCM/WAV 音频。
@@ -129,19 +133,36 @@
 ## 4.4 `text_injector`
 职责：把文本插入当前焦点输入框。
 
-推荐策略（稳定优先）：
+实现策略：
 
 1. 保存当前剪贴板。
 2. 写入识别文本到剪贴板。
-3. 发送粘贴快捷键（Linux 常见 `Ctrl+Shift+V` 或 `Ctrl+V`）。
+3. 根据热键模式和窗口检测结果发送对应粘贴快捷键。
 4. 恢复原剪贴板（可配置是否恢复）。
 
-依赖建议：
+粘贴快捷键选择逻辑：
+- F11（终端模式）：直接使用 `ctrl+shift+v`。
+- F10（智能模式）：通过 `window_detector` 检测当前窗口类型：
+  - 终端窗口 → `ctrl+shift+v`
+  - 普通窗口 → `ctrl+v`
+- 智能模式关闭时：使用 `default_shortcut`。
+
+依赖：
 
 1. `xclip` 或 `wl-clipboard`。
-2. 键盘注入可用 `xdotool`（X11）或框架自带发送按键。
+2. 键盘注入可用 `xdotool`（X11）。
 
-## 4.5 `app_state`
+## 4.5 `window_detector`
+职责：检测当前活跃窗口类型，决定粘贴快捷键。
+
+实现：
+
+1. 通过 `xdotool` 获取活跃窗口 ID。
+2. 通过 `xprop` 获取窗口类名（`WM_CLASS`）。
+3. 通过 `xdotool` 获取窗口标题。
+4. 匹配配置的 `terminal_classes` 和 `terminal_title_keywords` 判断是否为终端窗口。
+
+## 4.6 `app_state`
 状态机：
 
 1. `IDLE`
@@ -152,7 +173,7 @@
 
 状态机价值：避免重复触发、竞态冲突（例如按键连击）。
 
-## 4.6 `notifier`
+## 4.7 `notifier`
 职责：轻提示与日志。
 
 1. 声音提示（开始/结束/失败）。
@@ -212,8 +233,8 @@
 
 ```yaml
 hotkey:
-  mode: hold_to_talk
-  combo: f12
+  smart_combo: f10       # 智能粘贴模式（自动检测窗口类型）
+  terminal_combo: f11    # 终端粘贴模式（强制 ctrl+shift+v）
 
 audio:
   sample_rate: 16000
@@ -222,7 +243,8 @@ audio:
   max_record_seconds: 60
 
 asr:
-  endpoint: http://127.0.0.1:8001/asr/transcribe
+  endpoint: http://127.0.0.1:8000
+  model: /path/to/qwen3-asr-1.7B
   timeout_seconds: 20
   language: zh
   task: transcribe
@@ -230,9 +252,23 @@ asr:
 
 paste:
   enabled: true
-  method: clipboard
-  linux_paste_shortcut: ctrl+shift+v
+  smart_mode: true                    # 智能窗口检测
+  default_shortcut: ctrl+v            # 普通窗口粘贴快捷键
+  terminal_shortcut: ctrl+shift+v     # 终端窗口粘贴快捷键
   restore_clipboard: true
+  terminal_classes:
+    - gnome-terminal
+    - konsole
+    - kitty
+    - alacritty
+    - wezterm
+  terminal_title_keywords:
+    - terminal
+    - 终端
+    - bash
+    - zsh
+    - vim
+    - nvim
 
 ux:
   start_beep: true
@@ -260,6 +296,8 @@ voice_input/
   text_injector.py
   state_machine.py
   notifier.py
+  window_detector.py
+  voice_indicator.py
   utils.py
   tests/
     test_state_machine.py
@@ -519,5 +557,3 @@ sudo apt-get install -y xclip xdotool libportaudio2
 ```
 
 ---
-
-如果你认可这份文档，下一步可以直接开始创建 `voice_input/` 的可运行 MVP 代码骨架。

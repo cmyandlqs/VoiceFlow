@@ -4,9 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-VoiceFlow is a local voice input assistant for Ubuntu (X11). Press-and-hold F12 to record speech, release to transcribe via local vLLM ASR service, and automatically paste the result at the cursor position.
+VoiceFlow is a local voice input assistant for Ubuntu (X11). Use **F10** (smart paste mode) or **F11** (terminal paste mode) to record speech, release to transcribe via local vLLM ASR service, and automatically paste the result at the cursor position.
 
 **Core flow**: `HOTKEY_PRESS` → `RECORDING` → `HOTKEY_RELEASE` → `TRANSCRIBING` → `PASTING` → `IDLE`
+
+**Dual hotkey modes**:
+- **F10 (smart)**: Auto-detects active window type and picks the right paste shortcut (`ctrl+v` for normal apps, `ctrl+shift+v` for terminals).
+- **F11 (terminal)**: Forces `ctrl+shift+v` — use when the smart detection misses a terminal window.
 
 ## Development Commands
 
@@ -78,22 +82,25 @@ The entire application is driven by `StateMachine` ([state_machine.py](state_mac
 
 **TextInjector** ([text_injector.py](text_injector.py)):
 - Saves clipboard → sets new text → sends paste shortcut → restores clipboard
-- Tries both configured shortcut and `ctrl+shift+v` fallback
-- Timing: 0.1s delays between clipboard operations
+- Accepts optional `shortcut` parameter to override the default paste shortcut
+- Timing: 0.1s delays between clipboard operations, 0.5s before clipboard restore
 
 **HotkeyManager** ([hotkey_manager.py](hotkey_manager.py)):
 - X11-only (XGrabKey on root window)
+- Supports dual hotkey: accepts `combos` dict mapping key names to mode strings (e.g. `{"f10": "smart", "f11": "terminal"}`)
+- `on_release` callback receives `combo_mode` string to identify which key was pressed
 - Handles auto-repeat detection (peek next event)
-- Registers key with multiple modifiers (0, Mod2Mask, LockMask, combined)
+- Registers each key with multiple modifiers (0, Mod2Mask, LockMask, combined)
 
 ## Configuration
 
 All runtime behavior is configured via `config.yaml`:
-- `hotkey.combo`: F1-F12 or letter keys
+- `hotkey.smart_combo`: F10 (smart paste mode)
+- `hotkey.terminal_combo`: F11 (terminal paste mode)
 - `audio`: sample_rate, channels, max_record_seconds
-- `asr`: endpoint, model path, timeout, language
-- `paste`: linux_paste_shortcut, restore_clipboard
-- `ux`: indicator (bool), indicator_follow_pointer, beeps, notify
+- `asr`: endpoint, model path, timeout, language, task, prompt
+- `paste`: smart_mode (bool), default_shortcut, terminal_shortcut, terminal_classes, terminal_title_keywords, restore_clipboard
+- `ux`: indicator (bool), indicator_follow_pointer, start_beep, end_beep, error_beep, notify
 
 Config validation happens at startup in `utils.validate_config()` — missing required keys raise `ConfigValidationError`.
 
@@ -127,3 +134,9 @@ Tests use `autouse` fixtures for WAV file cleanup.
 **New UX element**: Add to `config.yaml` schema, read in `VoiceInputApp.__init__()`, pass to relevant module.
 
 **New ASR backend**: Only `asr_client.py` needs changes — keep the same `ASRResult` output format.
+
+**PasteModeDetector** ([window_detector.py](window_detector.py)):
+- Detects active window class (via `xprop`) and title (via `xdotool`)
+- Matches against configurable `terminal_classes` and `terminal_title_keywords`
+- Returns the appropriate paste shortcut for the current window
+- Used only in smart mode (F10); F11 bypasses detection entirely

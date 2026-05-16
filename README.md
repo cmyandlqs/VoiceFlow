@@ -2,7 +2,7 @@
 
 [English](README_EN.md)
 
-**本地语音输入助手** — 按住 F12 说话，松开后自动识别并粘贴到光标位置。
+**本地语音输入助手** — 按住 F10（智能粘贴）或 F11（终端粘贴）说话，松开后自动识别并粘贴到光标位置。
 
 无需云端，无需切换应用，说完即出字。
 
@@ -10,8 +10,9 @@
 
 ## 特性
 
-- **全局热键触发** — 按住 F12 录音，松开识别，不打断当前工作流
+- **双热键模式** — F10 智能粘贴（自动检测终端/普通窗口），F11 终端粘贴（强制 `ctrl+shift+v`）
 - **自动粘贴** — 识别结果直接插入当前光标位置
+- **智能窗口检测** — 自动判断当前窗口类型，选择正确的粘贴快捷键
 - **纯本机运行** — 音频不走外网，隐私安全
 - **低延迟** — 录音到出字端到端 1-3 秒
 - **可替换后端** — ASR 模型可通过配置切换
@@ -46,12 +47,13 @@ uv pip install -e ".[dev]"
 .venv/bin/python main.py
 ```
 
-按住 **F12** 开始录音，松开后自动识别并粘贴。`Ctrl+C` 退出。
+按住 **F10**（智能粘贴）或 **F11**（终端粘贴）开始录音，松开后自动识别并粘贴。`Ctrl+C` 退出。
 
 ## 使用方式
 
 ```
-任意应用中聚焦输入框 → 按住 F12 → 说话 → 松开 F12 → 文字自动出现在光标处
+普通应用：聚焦输入框 → 按住 F10 → 说话 → 松开 F10 → 文字自动出现在光标处
+终端应用：聚焦终端 → 按住 F10（自动检测终端）或 F11（强制终端模式）→ 说话 → 松开 → 文字自动粘贴
 ```
 
 ## 配置
@@ -60,7 +62,8 @@ uv pip install -e ".[dev]"
 
 ```yaml
 hotkey:
-  combo: f12              # 快捷键，支持 F1-F12、字母键
+  smart_combo: f10       # 智能粘贴模式（自动检测窗口类型）
+  terminal_combo: f11    # 终端粘贴模式（强制 ctrl+shift+v）
 
 audio:
   sample_rate: 16000      # 采样率
@@ -72,8 +75,12 @@ asr:
   language: zh                              # 语言
 
 paste:
-  linux_paste_shortcut: ctrl+v   # 粘贴快捷键
-  restore_clipboard: true         # 是否恢复原剪贴板内容
+  smart_mode: true                    # 智能窗口检测
+  default_shortcut: ctrl+v            # 普通窗口粘贴快捷键
+  terminal_shortcut: ctrl+shift+v     # 终端窗口粘贴快捷键
+  restore_clipboard: true             # 是否恢复原剪贴板内容
+  terminal_classes: [...]             # 终端窗口类名列表
+  terminal_title_keywords: [...]      # 终端标题关键词列表
 
 ux:
   indicator: true                 # 录音悬浮指示器（mac 风格胶囊）
@@ -91,9 +98,10 @@ ux:
 ├── audio_recorder.py    # 录音模块
 ├── asr_client.py        # ASR HTTP 客户端
 ├── text_injector.py     # 剪贴板粘贴
-├── hotkey_manager.py    # 全局热键（X11 XGrabKey）
+├── hotkey_manager.py    # 全局热键（X11 XGrabKey，双热键模式）
 ├── notifier.py          # 桌面通知 & 提示音
 ├── voice_indicator.py   # 录音悬浮指示器（Tkinter）
+├── window_detector.py   # 智能窗口检测（终端/普通窗口）
 ├── utils.py             # 配置加载 & 日志
 ├── config.yaml          # 配置文件
 ├── pyproject.toml       # 依赖管理
