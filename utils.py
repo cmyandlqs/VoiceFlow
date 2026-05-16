@@ -25,8 +25,8 @@ def validate_config(cfg: dict) -> None:
             raise ConfigValidationError(f"Missing required section: {section}")
 
     h = cfg["hotkey"]
-    if "combo" not in h:
-        raise ConfigValidationError("Missing hotkey.combo")
+    if "smart_combo" not in h and "terminal_combo" not in h:
+        raise ConfigValidationError("Missing hotkey.smart_combo or hotkey.terminal_combo")
 
     a = cfg["audio"]
     for field in ["sample_rate", "channels"]:

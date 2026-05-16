@@ -18,25 +18,37 @@ def _keycode_for_keysym(display: Display, keysym) -> int | None:
 
 
 class HotkeyManager:
-    def __init__(self, combo: str = "f12"):
-        self.combo = combo.lower()
+    def __init__(self, combos: str | dict[str, str] = "f12"):
+        """支持单个热键字符串或多个热键字典
+
+        Args:
+            combos: "f10" 或 {"f10": "smart", "f11": "terminal"}
+        """
+        if isinstance(combos, str):
+            self.combos = {combos.lower(): combos.lower()}
+        else:
+            self.combos = {k.lower(): v for k, v in combos.items()}
+
         self._on_press_cb = None
         self._on_release_cb = None
         self._thread = None
         self._stop_event = threading.Event()
         self._pressed = False
+        self._current_combo = None
 
     def on_press(self, callback) -> None:
         self._on_press_cb = callback
 
     def on_release(self, callback) -> None:
+        """回调会接收 combo 参数（用于区分是哪个热键）"""
         self._on_release_cb = callback
 
     def start(self) -> None:
         self._stop_event.clear()
         self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
-        logger.info("Hotkey registered: %s", self.combo)
+        for combo in self.combos.keys():
+            logger.info("Hotkey registered: %s", combo)
 
     def stop(self) -> None:
         self._stop_event.set()
@@ -49,21 +61,27 @@ class HotkeyManager:
         display = Display()
         root = display.screen().root
 
-        keysym = self._combo_to_keysym(self.combo)
-        if keysym is None:
-            logger.error("Unknown combo: %s", self.combo)
-            return
+        # 注册所有热键
+        keycodes = {}
+        for combo, mode in self.combos.items():
+            keysym = self._combo_to_keysym(combo)
+            if keysym is None:
+                logger.error("Unknown combo: %s", combo)
+                continue
 
-        keycode = _keycode_for_keysym(display, keysym)
-        if keycode is None:
-            logger.error("Cannot find keycode for: %s", self.combo)
-            return
+            keycode = _keycode_for_keysym(display, keysym)
+            if keycode is None:
+                logger.error("Cannot find keycode for: %s", combo)
+                continue
 
-        root.grab_key(keycode, 0, True, X.GrabModeAsync, X.GrabModeAsync)
-        root.grab_key(keycode, X.Mod2Mask, True, X.GrabModeAsync, X.GrabModeAsync)
-        root.grab_key(keycode, X.LockMask, True, X.GrabModeAsync, X.GrabModeAsync)
-        root.grab_key(keycode, X.Mod2Mask | X.LockMask, True,
-                      X.GrabModeAsync, X.GrabModeAsync)
+            keycodes[keycode] = combo
+
+            # Grab with various modifiers
+            root.grab_key(keycode, 0, True, X.GrabModeAsync, X.GrabModeAsync)
+            root.grab_key(keycode, X.Mod2Mask, True, X.GrabModeAsync, X.GrabModeAsync)
+            root.grab_key(keycode, X.LockMask, True, X.GrabModeAsync, X.GrabModeAsync)
+            root.grab_key(keycode, X.Mod2Mask | X.LockMask, True,
+                          X.GrabModeAsync, X.GrabModeAsync)
 
         root.change_attributes(event_mask=X.KeyPressMask | X.KeyReleaseMask)
 
@@ -72,20 +90,25 @@ class HotkeyManager:
                 event = display.next_event()
                 if event.type == X.KeyPress and not self._pressed:
                     self._pressed = True
+                    self._current_combo = keycodes.get(event.detail)
                     if self._on_press_cb:
                         self._on_press_cb()
                 elif event.type == X.KeyRelease and self._pressed:
                     if self._is_auto_repeat(display, event):
                         continue
                     self._pressed = False
+                    combo = self._current_combo or keycodes.get(event.detail)
                     if self._on_release_cb:
-                        self._on_release_cb()
+                        self._on_release_cb(combo)
+                    self._current_combo = None
             self._stop_event.wait(0.01)
 
-        root.ungrab_key(keycode, 0)
-        root.ungrab_key(keycode, X.Mod2Mask)
-        root.ungrab_key(keycode, X.LockMask)
-        root.ungrab_key(keycode, X.Mod2Mask | X.LockMask)
+        # Ungrab all keys
+        for keycode in keycodes.keys():
+            root.ungrab_key(keycode, 0)
+            root.ungrab_key(keycode, X.Mod2Mask)
+            root.ungrab_key(keycode, X.LockMask)
+            root.ungrab_key(keycode, X.Mod2Mask | X.LockMask)
         display.close()
 
     def _is_auto_repeat(self, display: Display, release_event) -> bool:

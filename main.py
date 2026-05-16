@@ -10,6 +10,7 @@ from text_injector import TextInjector
 from hotkey_manager import HotkeyManager
 from notifier import Notifier
 from voice_indicator import VoiceIndicator
+from window_detector import PasteModeDetector
 from utils import load_config, setup_logging
 
 logger = logging.getLogger("voice_input.main")
@@ -37,9 +38,23 @@ class VoiceInputApp:
             prompt=cfg["asr"].get("prompt", ""),
             model=cfg["asr"].get("model", ""),
         )
+
+        # 初始化窗口检测器
+        paste_config = cfg.get("paste", {})
+        if paste_config.get("smart_mode", True):
+            self.detector = PasteModeDetector(
+                default_shortcut=paste_config.get("default_shortcut", "ctrl+v"),
+                terminal_shortcut=paste_config.get("terminal_shortcut", "ctrl+shift+v"),
+                terminal_classes=paste_config.get("terminal_classes", []),
+                terminal_title_keywords=paste_config.get("terminal_title_keywords", []),
+            )
+        else:
+            self.detector = None
+            logger.info("Smart paste mode disabled")
+
         self.injector = TextInjector(
-            paste_shortcut=cfg["paste"].get("linux_paste_shortcut", "ctrl+shift+v"),
-            restore_clipboard=cfg["paste"].get("restore_clipboard", True),
+            default_shortcut=paste_config.get("default_shortcut", "ctrl+v"),
+            restore_clipboard=paste_config.get("restore_clipboard", True),
         )
         self.notifier = Notifier(
             notify_enabled=cfg.get("ux", {}).get("notify", True),
@@ -50,11 +65,18 @@ class VoiceInputApp:
             follow_pointer=cfg.get("ux", {}).get("indicator_follow_pointer", True),
         )
 
-        self.hotkey = HotkeyManager(combo=cfg["hotkey"]["combo"])
+        # 配置双热键
+        hotkey_config = cfg.get("hotkey", {})
+        combos = {
+            hotkey_config.get("smart_combo", "f10"): "smart",
+            hotkey_config.get("terminal_combo", "f11"): "terminal",
+        }
+        self.hotkey = HotkeyManager(combos=combos)
         self.hotkey.on_press(self._on_hotkey_press)
         self.hotkey.on_release(self._on_hotkey_release)
 
         self._running = False
+        self._current_mode = None  # "smart" or "terminal"
 
     def _on_hotkey_press(self) -> None:
         if not self.state.is_idle:
@@ -71,7 +93,14 @@ class VoiceInputApp:
             self.indicator.hide()
             self.state.force_reset("START_FAILED")
 
-    def _on_hotkey_release(self) -> None:
+    def _on_hotkey_release(self, combo_mode: str | None = None) -> None:
+        """热键释放时的处理
+
+        Args:
+            combo_mode: "smart" 或 "terminal"，表示是哪个热键触发
+        """
+        # 记录当前模式
+        self._current_mode = combo_mode
         if not self.state.is_recording:
             return
         try:
@@ -96,7 +125,21 @@ class VoiceInputApp:
 
             self.state.transition(AppState.PASTING, "ASR_SUCCESS")
 
-            if self.injector.inject(result.text):
+            # 根据热键模式选择粘贴快捷键
+            shortcut = None
+            if self._current_mode == "terminal":
+                # F11: 强制终端模式
+                shortcut = "ctrl+shift+v"
+                logger.info("Using terminal paste mode (F11)")
+            elif self.detector:
+                # F10: 智能检测模式
+                shortcut = self.detector.detect_shortcut()
+                logger.info("Smart paste detected shortcut: %s", shortcut)
+            else:
+                # 智能模式关闭，使用默认
+                logger.info("Smart mode disabled, using default shortcut")
+
+            if self.injector.inject(result.text, shortcut=shortcut):
                 self.notifier.notify(f"已输入: {result.text}")
                 self.notifier.play_end_beep()
             else:
@@ -129,7 +172,7 @@ class VoiceInputApp:
         self._running = True
         self.indicator.start()
         self.hotkey.start()
-        logger.info("Voice Input started. Press F12 to talk. Ctrl+C to quit.")
+        logger.info("Voice Input started. Press F10 for smart paste, F11 for terminal paste. Ctrl+C to quit.")
 
         def signal_handler(sig, frame):
             logger.info("Received signal %s, shutting down...", sig)

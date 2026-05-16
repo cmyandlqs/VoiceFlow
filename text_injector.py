@@ -6,12 +6,18 @@ logger = logging.getLogger("voice_input.injector")
 
 
 class TextInjector:
-    def __init__(self, paste_shortcut: str = "ctrl+v",
+    def __init__(self, default_shortcut: str = "ctrl+v",
                  restore_clipboard: bool = True):
-        self.paste_shortcut = paste_shortcut
+        self.default_shortcut = default_shortcut
         self.restore_clipboard = restore_clipboard
 
-    def inject(self, text: str) -> bool:
+    def inject(self, text: str, shortcut: str | None = None) -> bool:
+        """注入文本到光标位置
+
+        Args:
+            text: 要注入的文本
+            shortcut: 粘贴快捷键，None 表示使用 default_shortcut
+        """
         if not text:
             logger.debug("Empty text, skipping paste")
             return False
@@ -21,9 +27,13 @@ class TextInjector:
         try:
             self._set_clipboard(text)
             time.sleep(0.1)
-            self._send_paste()
+
+            # 使用指定的快捷键，或默认快捷键
+            final_shortcut = shortcut or self.default_shortcut
+            self._send_paste(final_shortcut)
+
             time.sleep(0.1)
-            logger.info("[paste] success text_len=%d", len(text))
+            logger.info("[paste] success text_len=%d shortcut=%s", len(text), final_shortcut)
             return True
         except Exception as e:
             logger.error("[paste] failed: %s", e)
@@ -61,11 +71,14 @@ class TextInjector:
         except Exception as e:
             logger.warning("Failed to restore clipboard: %s", e)
 
-    def _send_paste(self) -> None:
-        for shortcut in [self.paste_shortcut, "ctrl+shift+v"]:
-            if shortcut:
-                subprocess.run(
-                    ["xdotool", "key", "--clearmodifiers", shortcut],
-                    check=False, timeout=2,
-                )
-                time.sleep(0.05)
+    def _send_paste(self, shortcut: str) -> None:
+        """发送粘贴快捷键（只发送一次）"""
+        if not shortcut:
+            logger.debug("No shortcut provided, skipping paste")
+            return
+
+        subprocess.run(
+            ["xdotool", "key", "--clearmodifiers", shortcut],
+            check=False, timeout=2,
+        )
+        logger.debug("Sent paste shortcut: %s", shortcut)

@@ -1,6 +1,6 @@
 hotkey:
-  mode: hold_to_talk
-  combo: f12
+  smart_combo: f10
+  terminal_combo: f11
 
 audio:
   sample_rate: 16000
@@ -17,9 +17,32 @@ asr:
 
 paste:
   enabled: true
-  method: clipboard
-  linux_paste_shortcut: ctrl+v
+  smart_mode: true
+  default_shortcut: ctrl+v
+  terminal_shortcut: ctrl+shift+v
   restore_clipboard: true
+
+  terminal_classes:
+    - gnome-terminal
+    - konsole
+    - xfce4-terminal
+    - kitty
+    - alacritty
+    - wezterm
+    - tilix
+    - xterm
+    - org.gnome.terminal
+
+  terminal_title_keywords:
+    - terminal
+    - 终端
+    - bash
+    - zsh
+    - fish
+    - ssh
+    - tmux
+    - vim
+    - nvim
 
 ux:
   indicator: true
